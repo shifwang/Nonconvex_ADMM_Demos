@@ -48,8 +48,8 @@ function [x, FLAG, iter, beta, obj, err, Lagrangian, timing] = LqBasisPursuit(A,
   x0        = zeros(size(A,2),1);
   AUTO      = true;
   SCALE     = 1.2;
-  RELTOL    = 1e-3;
-  ABSTOL    = 1e-4;
+  RELTOL    = 1e-6;
+  ABSTOL    = 1e-7;
   MAXCOUNTS = 100;
   MAXITER   = 1000;
   VERBOSE   = true;
@@ -139,6 +139,7 @@ function [x, FLAG, iter, beta, obj, err, Lagrangian, timing] = LqBasisPursuit(A,
       break;
     end
   end
+  iter = k;
   timing = toc;
   if VERBOSE
     fprintf('ADMM has stopped at iter %4d because of %10s.\n',k,FLAG);
