@@ -1,4 +1,4 @@
-function [x, FLAG, iter, beta, obj, err, Lagrangian, timing] = LqBasisPursuit(A, y, q,beta)
+function [x, FLAG, iter, betas, obj, err, Lagrangian, timing, err_rel, err_abs] = LqBasisPursuit(A, y, q,beta)
   % Lq_basis_pursuit  Solve Lq basis pursuit via ADMM
   %
   % Solves the following problem via ADMM:
@@ -25,11 +25,13 @@ function [x, FLAG, iter, beta, obj, err, Lagrangian, timing] = LqBasisPursuit(A,
   %                    beta > LARGE (only happens when beta is set automatically)
   %                   
   %   iter       : final iteration
-  %   beta       : final beta
+  %   betas      : beta of different iterates
   %   obj        : vector of || x^k ||_q^q for each k
-  %   error      : vector of || x^k - z^k ||_inf for each k
+  %   err        : vector of || x^k - z^k ||_inf for each k
   %   Lagrangian : vector of Lagrangian function for each k
   %   timing     : elapsed time of the algorithm
+  %   err_rel    : the relative lower bound of different iterates
+  %   err_abs    : the absolute lower bound of different iterates
   %
   % More information can be found in the paper linked at:
   %   http://arxiv.org/abs/1511.06324
@@ -63,7 +65,6 @@ function [x, FLAG, iter, beta, obj, err, Lagrangian, timing] = LqBasisPursuit(A,
   assert(size(x0,2) == 1);
   % Default constant
   LARGE  = 1e6;
-  EPS    = 1e-10;
   [m, n] = size(A);
   if AUTO
     increasecounts = 0;
@@ -74,9 +75,12 @@ function [x, FLAG, iter, beta, obj, err, Lagrangian, timing] = LqBasisPursuit(A,
   x = x0;
   z = x0;
   w = zeros(size(x0));
-  obj    = nan(MAXITER, 1);
-  err    = nan(MAXITER, 1);
-  lagrng = nan(MAXITER, 1);
+  obj     = nan(MAXITER, 1);
+  err     = nan(MAXITER, 1);
+  err_rel = nan(MAXITER, 1);
+  err_abs = nan(MAXITER, 1);
+  betas   = nan(MAXITER, 1);
+  lagrng  = nan(MAXITER, 1);
   % pre-defined functions
   InfNorm    = @(x) max(abs(x));
   Lq         = @(x) sum(abs(x).^q);
@@ -103,9 +107,12 @@ function [x, FLAG, iter, beta, obj, err, Lagrangian, timing] = LqBasisPursuit(A,
     % w update
     w = w + beta * (x - z);
     % record the values
-    obj(k) = Lq(x);
-    err(k) = InfNorm(x - z);
-    lagrng(k) = Lagrangian(x, z, w, beta);
+    obj(k)     = Lq(x);
+    err(k)     = InfNorm(x - z);
+    betas(k)   = beta;
+    lagrng(k)  = Lagrangian(x, z, w, beta);
+    err_rel(k) = RELTOL * InfNorm([x;z]);
+    err_abs(k) = ABSTOL;
     if VERBOSE 
       fprintf('%4d\t%10.4f\t%10.4f\t%10.4f\n', k, obj(k), lagrng(k), err(k));
     end
