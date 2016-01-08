@@ -9,14 +9,15 @@ function [x, FLAG, iter, betas, obj, err, Lagrangian, timing, err_rel, err_abs] 
   % Args:
   %   A         : matrix
   %   y         : observation vector
-  %   q         : 0 < q <= 1 constant
+  %   q         : 0 < q <= 1 constant, can only be 0.5 or 1
+  %   beta      : initial penalty parameter in ADMM
   %
   % Returns:
   %   x         : estimated vector 
   %   FLAG      : a string indicating the exit status
   %              'Max iteration' : Max iteration has been met.
   %              'Relative error': RELTOL has been met, i.e., 
-  %                    ||x^k - z^k||_inf < RELTOL * \|c(x^k,z^k)\|_inf
+  %                    ||x^k - z^k||_inf < RELTOL * \| [x^k;z^k] \|_inf
   %              'Absolute error': ABSTOL has been met, i.e.,
   %                    ||x^k - z^k||_inf < ABSTOL
   %              'Unbounded'     : sequence is unbounded, i.e.,
@@ -35,11 +36,11 @@ function [x, FLAG, iter, betas, obj, err, Lagrangian, timing, err_rel, err_abs] 
   %
   % More information can be found in the paper linked at:
   %   http://arxiv.org/abs/1511.06324
-  %
-  
+  % The original convex version can be found in (Jan. 7, 2016)
+  %   http://web.stanford.edu/~boyd/papers/admm
+
   % other parameters
   %   x0        : initial point, default is the zero vector
-  %   beta      : penalty parameter, default is 10
   %   AUTO      : whether beta can be changed by the program
   %   MAXCOUNTS : when Lagrangian increases MAXCOUNTS times, beta = beta * SCALE
   %   SCALE     : beta = beta * SCALE when Lagrangian increases MAXCOUNTS times.
